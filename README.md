@@ -1,6 +1,6 @@
 English | [简体中文](./README_zh-CN.md)
 
-# Sail
+# Sail test
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
