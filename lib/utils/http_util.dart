@@ -1,20 +1,14 @@
 import 'package:dio/dio.dart';
-import 'package:sail_app/constant/app_strings.dart';
-import 'package:sail_app/router/application.dart';
-import 'package:sail_app/router/routers.dart';
-import 'package:sail_app/utils/common_util.dart';
-import 'package:sail_app/utils/shared_preferences_util.dart';
+import 'package:sail/constant/app_strings.dart';
+import 'package:sail/router/application.dart';
+import 'package:sail/router/routers.dart';
+import 'package:sail/utils/common_util.dart';
+import 'package:sail/utils/shared_preferences_util.dart';
 
 class HttpUtil {
-  // 工厂模式
-  static HttpUtil? get instance => _getInstance();
-  static HttpUtil? _httpUtil;
+  static HttpUtil get instance => _httpUtil;
+  static final HttpUtil _httpUtil = HttpUtil();
   late Dio dio;
-
-  static HttpUtil? _getInstance() {
-    _httpUtil ??= HttpUtil();
-    return _httpUtil;
-  }
 
   HttpUtil() {
     BaseOptions options = BaseOptions(
@@ -48,7 +42,6 @@ class HttpUtil {
     }, onResponse: (response, handler) {
       print("========================请求数据===================");
       print("code=${response.statusCode}");
-      print("response=${response.data}");
 
       if (response.statusCode! < 200 || response.statusCode! >= 300) {
         if (response.statusCode == 403) {
@@ -64,7 +57,6 @@ class HttpUtil {
       print("========================请求错误===================");
       print("message =${error.message}");
       print("code=${error.response?.statusCode}");
-      print("response=${error.response?.data}");
 
       return handler.next(error);
     }));

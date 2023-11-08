@@ -3,23 +3,13 @@ import 'dart:convert';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:sail_app/pages/crisp_page.dart';
-import 'package:sail_app/pages/plan/plan_page.dart';
-import 'package:sail_app/pages/server_list.dart';
-import 'package:sail_app/router/application.dart';
-import 'package:sail_app/router/routers.dart';
+import 'package:sail/pages/crisp_page.dart';
+import 'package:sail/pages/plan/plan_page.dart';
+import 'package:sail/pages/server_list.dart';
+import 'package:sail/router/application.dart';
+import 'package:sail/router/routers.dart';
 
 class NavigatorUtil {
-  static goMainPage(BuildContext context) {
-    Application.router?.navigateTo(context, Routers.root,
-        transition: TransitionType.inFromRight, replace: true);
-  }
-
-  static goGuidePage(BuildContext context) {
-    Application.router?.navigateTo(context, Routers.guide,
-        transition: TransitionType.inFromRight, replace: true);
-  }
-
   static goHomePage(BuildContext context) {
     Application.router?.navigateTo(context, Routers.home,
         transition: TransitionType.inFromRight, replace: true);

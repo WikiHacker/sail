@@ -3,11 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:sail_app/entity/plan_entity.dart';
-import 'package:sail_app/models/user_model.dart';
-import 'package:sail_app/service/plan_service.dart';
-import 'package:sail_app/service/user_service.dart';
-import 'package:sail_app/utils/navigator_util.dart';
+import 'package:sail/entity/plan_entity.dart';
+import 'package:sail/models/user_model.dart';
+import 'package:sail/service/plan_service.dart';
+import 'package:sail/service/user_service.dart';
+import 'package:sail/utils/navigator_util.dart';
 
 class SlidingCardsView extends StatefulWidget {
   const SlidingCardsView({Key? key}) : super(key: key);
@@ -57,8 +57,8 @@ class SlidingCardsViewState extends State<SlidingCardsView> {
               quarterPrice: (e.quarterPrice ?? 0.0) / 100,
               halfYearPrice: (e.halfYearPrice ?? 0.0) / 100,
               yearPrice: (e.yearPrice ?? 0.0) / 100,
-              twoYearPrice: (e.twoYearPrice) ?? 0.0 / 100,
-              threeYearPrice: (e.threeYearPrice) ?? 0.0 / 100,
+              twoYearPrice: (e.twoYearPrice ?? 0.0) / 100,
+              threeYearPrice: (e.threeYearPrice ?? 0.0) / 100,
               assetName: 'steve-johnson.jpeg',
               offset: pageOffset)))),
     );
@@ -129,7 +129,8 @@ class SlidingCard extends StatelessWidget {
         child: Column(
           children: <Widget>[
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
               child: Image.asset(
                 'assets/$assetName',
                 height: MediaQuery.of(context).size.height * 0.3,
@@ -209,20 +210,25 @@ class CardContentState extends State<CardContent> {
                 offset: Offset(48 * widget.offset, 0),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: Colors.yellow,
-                    onPrimary: Colors.white,
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.yellow,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(32),
                     ),
                   ),
                   onPressed: () => _userModel.checkHasLogin(
                       context,
-                      () => UserService().getQuickLoginUrl({'redirect': "/plan/${widget.id}"})?.then((value) {
+                      () => UserService().getQuickLoginUrl({
+                            'redirect': "/plan/${widget.id}"
+                          })?.then((value) {
                             NavigatorUtil.goWebView(context, "配置订阅", value);
                           })),
                   child: Transform.translate(
                     offset: Offset(24 * widget.offset, 0),
-                    child: Text('购买', style: TextStyle(color: Colors.black87, fontSize: ScreenUtil().setSp(36))),
+                    child: Text('购买',
+                        style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: ScreenUtil().setSp(36))),
                   ),
                 ),
               ),

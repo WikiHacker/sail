@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:sail_app/constant/app_colors.dart';
-import 'package:sail_app/entity/plan_entity.dart';
-import 'package:sail_app/models/app_model.dart';
-import 'package:sail_app/models/user_model.dart';
-import 'package:sail_app/models/user_subscribe_model.dart';
-import 'package:sail_app/service/plan_service.dart';
-import 'package:sail_app/widgets/connection_stats.dart';
-import 'package:sail_app/widgets/logo_bar.dart';
-import 'package:sail_app/widgets/my_subscribe.dart';
-import 'package:sail_app/widgets/plan_list.dart';
-import 'package:sail_app/widgets/select_location.dart';
+import 'package:sail/constant/app_colors.dart';
+import 'package:sail/models/app_model.dart';
+import 'package:sail/models/plan_model.dart';
+import 'package:sail/models/user_model.dart';
+import 'package:sail/models/user_subscribe_model.dart';
+import 'package:sail/widgets/bottom_block.dart';
+import 'package:sail/widgets/connection_stats.dart';
+import 'package:sail/widgets/logo_bar.dart';
+import 'package:sail/widgets/my_subscribe.dart';
+import 'package:sail/widgets/plan_list.dart';
+import 'package:sail/widgets/select_location.dart';
+import 'package:sail/utils/common_util.dart';
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({Key? key}) : super(key: key);
@@ -24,21 +25,28 @@ class HomeWidgetState extends State<HomeWidget> with AutomaticKeepAliveClientMix
   late AppModel _appModel;
   late UserModel _userModel;
   late UserSubscribeModel _userSubscribeModel;
-  List<PlanEntity> _planEntityList = [];
+  late PlanModel _planModel;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  final ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
 
-    PlanService().plan()?.then((planEntityList) {
-      setState(() {
-        _planEntityList = planEntityList;
-      });
+    _controller.addListener(() {
+      print(_controller.offset);
     });
   }
 
   @override
-  bool get wantKeepAlive => true;
+  void dispose() {
+    //为了避免内存泄露，需要调用_controller.dispose
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -46,6 +54,7 @@ class HomeWidgetState extends State<HomeWidget> with AutomaticKeepAliveClientMix
     _appModel = Provider.of<AppModel>(context);
     _userModel = Provider.of<UserModel>(context);
     _userSubscribeModel = Provider.of<UserSubscribeModel>(context);
+    _planModel = Provider.of<PlanModel>(context);
   }
 
   @override
@@ -53,6 +62,7 @@ class HomeWidgetState extends State<HomeWidget> with AutomaticKeepAliveClientMix
     super.build(context);
 
     return SingleChildScrollView(
+        controller: _controller,
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
@@ -69,21 +79,22 @@ class HomeWidgetState extends State<HomeWidget> with AutomaticKeepAliveClientMix
               child: MySubscribe(
                 isLogin: _userModel.isLogin,
                 isOn: _appModel.isOn,
-                userSubscribeEntity: _userSubscribeModel.userSubscribeEntity!,
+                userSubscribeEntity: _userSubscribeModel.userSubscribeEntity,
               ),
             ),
 
             Padding(
-              padding: EdgeInsets.symmetric(vertical: ScreenUtil().setWidth(30)),
+              padding: EdgeInsets.only(top: ScreenUtil().setWidth(30)),
               child: PlanList(
                 isOn: _appModel.isOn,
-                boughtPlanId: _userSubscribeModel.userSubscribeEntity?.planId ?? 0,
-                plans: _planEntityList,
+                userSubscribeEntity: _userSubscribeModel.userSubscribeEntity,
+                plans: _planModel.planEntityList,
               ),
             ),
 
-            Container(
-                padding: EdgeInsets.symmetric(horizontal: ScreenUtil().setWidth(75)),
+            Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: ScreenUtil().setWidth(75), vertical: ScreenUtil().setWidth(30)),
                 child: Stack(alignment: Alignment.center, children: [
                   Image.asset(
                     "assets/map.png",
@@ -93,6 +104,7 @@ class HomeWidgetState extends State<HomeWidget> with AutomaticKeepAliveClientMix
                 ])),
 
             _appModel.isOn ? const ConnectionStats() : const SelectLocation(),
+            const BottomBlock(),
           ],
         ));
   }

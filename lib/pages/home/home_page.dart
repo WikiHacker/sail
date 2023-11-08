@@ -1,19 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:sail_app/constant/app_colors.dart';
-import 'package:sail_app/constant/app_strings.dart';
-import 'package:sail_app/models/app_model.dart';
-import 'package:sail_app/models/server_model.dart';
-import 'package:sail_app/models/user_model.dart';
-import 'package:sail_app/models/user_subscribe_model.dart';
-import 'package:sail_app/pages/my_profile.dart';
-import 'package:sail_app/pages/plan/plan_page.dart';
-import 'package:sail_app/pages/server_list.dart';
-import 'package:sail_app/widgets/home_widget.dart';
-import 'package:sail_app/widgets/power_btn.dart';
-import 'package:sail_app/widgets/sail_app_bar.dart';
+import 'package:sail/constant/app_colors.dart';
+import 'package:sail/constant/app_dimens.dart';
+import 'package:sail/models/app_model.dart';
+import 'package:sail/models/plan_model.dart';
+import 'package:sail/models/server_model.dart';
+import 'package:sail/models/user_model.dart';
+import 'package:sail/models/user_subscribe_model.dart';
+import 'package:sail/pages/my_profile.dart';
+import 'package:sail/pages/plan/plan_page.dart';
+import 'package:sail/pages/server_list.dart';
+import 'package:sail/widgets/home_widget.dart';
+import 'package:sail/widgets/power_btn.dart';
+import 'package:sail/widgets/sail_app_bar.dart';
+import 'package:sail/utils/common_util.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -22,21 +26,48 @@ class HomePage extends StatefulWidget {
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage> {
-  final PageController _pageController = PageController(initialPage: 0);
+class HomePageState extends State<HomePage> with WidgetsBindingObserver {
   late AppModel _appModel;
   late ServerModel _serverModel;
   late UserModel _userModel;
   late UserSubscribeModel _userSubscribeModel;
+  late PlanModel _planModel;
   bool _isLoadingData = false;
-  String _appTitle = 'Sail';
+  bool _initialStatus = false;
+  late Timer _timer;
 
-  final Map _tabMap = {
-    0: AppStrings.appName,
-    1: '套餐',
-    2: '节点',
-    3: '我的',
-  };
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    createTimer();
+  }
+
+  @override
+  void dispose() {
+    cancelTimer();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void createTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _appModel.getStatus();
+    });
+  }
+
+  void cancelTimer() {
+    _timer.cancel();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('state = $state');
+
+    if (state == AppLifecycleState.resumed) {
+      _planModel.fetchPlanList();
+    }
+  }
 
   @override
   void didChangeDependencies() async {
@@ -46,31 +77,31 @@ class HomePageState extends State<HomePage> {
     _userModel = Provider.of<UserModel>(context);
     _userSubscribeModel = Provider.of<UserSubscribeModel>(context);
     _serverModel = Provider.of<ServerModel>(context);
+    _planModel = Provider.of<PlanModel>(context);
 
     if (_userModel.isLogin && !_isLoadingData) {
       _isLoadingData = true;
       await _userSubscribeModel.getUserSubscribe();
       await _serverModel.getServerList(forceRefresh: true);
       await _serverModel.getSelectServer();
-      await _serverModel.getSelectServerList();
+      _appModel.setConfigProxies(_userModel, _serverModel);
     }
-  }
 
-  void jumpToPage(int page) {
-    setState(() {
-      _pageController.jumpToPage(page);
-      _appTitle = _tabMap[page];
-      print("_appTitle: $_appTitle");
-    });
+    if (!_initialStatus) {
+      _initialStatus = true;
+      _planModel.fetchPlanList();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.init(context, designSize: const Size(AppDimens.maxWidth, AppDimens.maxHeight));
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
         value: _appModel.isOn ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
         child: Scaffold(
             appBar: SailAppBar(
-              appTitle: _appTitle,
+              appTitle: _appModel.appTitle,
             ),
             extendBody: true,
             backgroundColor: _appModel.isOn ? AppColors.yellowColor : AppColors.grayColor,
@@ -78,7 +109,7 @@ class HomePageState extends State<HomePage> {
                 bottom: false,
                 child: PageView(
                   physics: const NeverScrollableScrollPhysics(),
-                  controller: _pageController,
+                  controller: _appModel.pageController,
                   children: const [HomeWidget(), PlanPage(), ServerListPage(), MyProfile()],
                 )),
             floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -100,14 +131,14 @@ class HomePageState extends State<HomePage> {
                           Icons.home_rounded,
                           color: Colors.white,
                         ),
-                        onPressed: () => jumpToPage(0),
+                        onPressed: () => _appModel.jumpToPage(0),
                       ),
                       IconButton(
                         icon: const Icon(
                           Icons.wallet,
                           color: Colors.white,
                         ),
-                        onPressed: () => jumpToPage(1),
+                        onPressed: () => _appModel.jumpToPage(1),
                       ),
                       SizedBox(
                         width: ScreenUtil().setWidth(50),
@@ -117,14 +148,14 @@ class HomePageState extends State<HomePage> {
                           Icons.cloud_rounded,
                           color: Colors.white,
                         ),
-                        onPressed: () => jumpToPage(2),
+                        onPressed: () => _appModel.jumpToPage(2),
                       ),
                       IconButton(
                         icon: const Icon(
                           Icons.person,
                           color: Colors.white,
                         ),
-                        onPressed: () => jumpToPage(3),
+                        onPressed: () => _appModel.jumpToPage(3),
                       )
                     ],
                   ),

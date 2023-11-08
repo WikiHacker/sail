@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:sail_app/constant/app_colors.dart';
-import 'package:sail_app/models/user_model.dart';
-import 'package:sail_app/utils/navigator_util.dart';
+import 'package:sail/constant/app_colors.dart';
+import 'package:sail/models/app_model.dart';
+import 'package:sail/models/user_model.dart';
+import 'package:sail/utils/navigator_util.dart';
 
 class ConnectionStats extends StatefulWidget {
   const ConnectionStats({Key? key}) : super(key: key);
@@ -15,20 +15,48 @@ class ConnectionStats extends StatefulWidget {
 
 class ConnectionStatsState extends State<ConnectionStats> {
   late UserModel _userModel;
+  late AppModel _appModel;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     _userModel = Provider.of<UserModel>(context);
+    _appModel = Provider.of<AppModel>(context);
+  }
+
+  String toDateString(DateTime date) {
+    var duration = DateTime.now().difference(date);
+    var microseconds = duration.inMicroseconds;
+    var sign = (microseconds < 0) ? "-" : "";
+
+    var hours = microseconds ~/ Duration.microsecondsPerHour;
+    microseconds = microseconds.remainder(Duration.microsecondsPerHour);
+    var hoursPadding = hours.abs() < 10 ? "0" : "";
+
+    if (microseconds < 0) microseconds = -microseconds;
+
+    var minutes = microseconds ~/ Duration.microsecondsPerMinute;
+    microseconds = microseconds.remainder(Duration.microsecondsPerMinute);
+
+    var minutesPadding = minutes < 10 ? "0" : "";
+
+    var seconds = microseconds ~/ Duration.microsecondsPerSecond;
+    microseconds = microseconds.remainder(Duration.microsecondsPerSecond);
+
+    var secondsPadding = seconds < 10 ? "0" : "";
+
+    return "$sign$hoursPadding${hours.abs()}:"
+        "$minutesPadding$minutes:"
+        "$secondsPadding$seconds";
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text("00:15:02",
-            style: TextStyle(
+        Text(toDateString(_appModel.connectedDate!),
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 40,
               color: AppColors.grayColor,
@@ -39,7 +67,7 @@ class ConnectionStatsState extends State<ConnectionStats> {
               onPressed: () => _userModel.checkHasLogin(context, () => NavigatorUtil.goServerList(context)),
               child:
               Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
-                Icon(MaterialCommunityIcons.map_marker,
+                Icon(Icons.map,
                     color: AppColors.grayColor, size: 20),
                 Text("其他节点",
                     style:
